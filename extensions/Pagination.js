@@ -482,11 +482,14 @@ define([
 					Math.floor(event.index / rowsPerPage) !== Math.floor(event.previousIndex / rowsPerPage));
 
 			if (needsRefresh) {
-				// Refresh the current page to maintain correct number of rows on page
-				this.gotoPage(Math.min(this._currentPage, Math.ceil(event.totalLength / this.rowsPerPage)) || 1);
+				var page = Math.min(this._currentPage, Math.ceil(event.totalLength / this.rowsPerPage)) || 1;
+				if (page !== this._currentPage){
+					// Refresh the current page to maintain correct number of rows on page
+					this.gotoPage(page);
+				}
 			}
 			// If we're not updating the whole page, check if we at least need to update status/navigation
-			else if (collection === this._renderedCollection && event.totalLength !== this._total) {
+			if (collection === this._renderedCollection && event.totalLength !== this._total) {
 				this._updatePaginationStatus(event.totalLength);
 				this._updateNavigation(event.totalLength);
 			}
