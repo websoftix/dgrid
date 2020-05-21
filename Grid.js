@@ -233,8 +233,13 @@ define([
 				// Support formatter, with or without formatterScope
 				var formatter = this.formatter,
 					formatterScope = this.grid.formatterScope;
-				td.innerHTML = typeof formatter === 'string' && formatterScope ?
+				var formattedValue = typeof formatter === 'string' && formatterScope ?
 					formatterScope[formatter](value, object) : this.formatter(value, object);
+				if (formattedValue != null && formattedValue.hasOwnProperty('html')) {
+					td.innerHTML = formattedValue.html;
+				} else if (formattedValue != null) {
+					td.appendChild(document.createTextNode(formattedValue));
+				}
 			}
 			else if (value != null) {
 				td.appendChild(document.createTextNode(value));
@@ -400,7 +405,9 @@ define([
 			// Clean up UI from any previous sort
 			if (this._lastSortedArrow) {
 				// Remove the sort classes from the parent node
-				domClass.remove(this._lastSortedArrow.parentNode, 'dgrid-sort-up dgrid-sort-down');
+				if (this._lastSortedArrow.parentNode) {
+					domClass.remove(this._lastSortedArrow.parentNode, 'dgrid-sort-up dgrid-sort-down');
+				}
 				// Destroy the lastSortedArrow node
 				domConstruct.destroy(this._lastSortedArrow);
 				delete this._lastSortedArrow;
