@@ -279,7 +279,8 @@ define([
 			//			property's value for this specific refresh call only.
 
 			var self = this,
-				keep = (options && options.keepScrollPosition);
+				keep = (options && options.keepScrollPosition),
+				fetchResults;
 
 			// Fall back to instance property if option is not defined
 			if (typeof keep === 'undefined') {
@@ -294,15 +295,25 @@ define([
 			this.inherited(arguments);
 			if (this._renderedCollection) {
 				// render the query
-
 				// renderQuery calls _trackError internally
 				return this.renderQuery(function (queryOptions) {
-					return self._renderedCollection.fetchRange({
+					var queryResults = self._renderedCollection.fetchRange({
 						start: queryOptions.start,
 						end: queryOptions.start + queryOptions.count
 					});
+
+					queryResults.then(function (results) {
+						fetchResults = results;
+					});
+
+					// It is important to return the original QueryResults object, which is a special promise
+					// with 'totalLength' and 'forEach' properties on it. Returning a chained promise would
+					// lose these properties.
+					return queryResults;
 				}).then(function () {
 					self._emitRefreshComplete();
+
+					return fetchResults;
 				});
 			}
 		},
@@ -384,6 +395,7 @@ define([
 
 		_updatePreloadRowHeights: function () {
 			var preload = this.preload;
+			var rowHeight = 0;
 			if (!preload) {
 				return;
 			}
@@ -392,12 +404,14 @@ define([
 			}
 			while (preload) {
 				if (!preload.rowHeight) {
-					preload.rowHeight = this.rowHeight ||
+					preload.rowHeight = 
 						this._calcAverageRowHeight(preload.node.parentNode.querySelectorAll('.dgrid-row'));
 					this._adjustPreloadHeight(preload);
 				}
+				rowHeight = preload ? preload.rowHeight : rowHeight;
 				preload = preload.next;
 			}
+			this.rowHeight = rowHeight;
 		},
 
 		lastScrollTop: 0,

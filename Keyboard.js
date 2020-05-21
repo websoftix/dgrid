@@ -37,6 +37,10 @@ define([
 		//		of the instance) for key events within the grid's header row.
 		headerKeyMap: null,
 
+		// mouseDownEventType: dojo/on compatible event type
+		//		Event type to use for Keyboard's mouse down listener that sets focus.
+		mouseDownEventType: 'mousedown',
+
 		postMixInProperties: function () {
 			this.inherited(arguments);
 
@@ -141,7 +145,7 @@ define([
 					);
 				}
 
-				grid._listeners.push(on(areaNode, 'mousedown', function (event) {
+				grid._listeners.push(on(areaNode, grid.mouseDownEventType, function (event) {
 					if (!handledEvent(event)) {
 						grid._focusOnNode(event.target, isHeader, event);
 					}
@@ -460,6 +464,9 @@ define([
 	// Common functions used in default keyMap (called in instance context)
 
 	var moveFocusVertical = Keyboard.moveFocusVertical = function (event, steps) {
+		// if there is no _focusNode (for example, when the grid doesn't have data) don't try to find the next focus row/cell
+		if (!this._focusedNode) { return; }
+
 		var cellNavigation = this.cellNavigation,
 			target = this[cellNavigation ? 'cell' : 'row'](event),
 			columnId = cellNavigation && target.column.id,
